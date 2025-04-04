@@ -1,0 +1,8 @@
+flask==2.3.*
+google-cloud-aiplatform==1.36.*
+google-cloud-firestore==2.*
+google-cloud-secret-manager==2.*
+firebase-admin==6.2.*
+python-dotenv==1.0.*
+flask-cors==4.0.*
+gunicorn==21.2.* 
