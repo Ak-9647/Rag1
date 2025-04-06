@@ -21,6 +21,6 @@ build/
 # Mac specific
 .DS_Store
 
-# Editor specific (add for VS Code/Cursor if needed)
+# Editor specific (add for VS Code/Cursor if hbjjbjneeded)
 .vscode/
 .cursor-cache/
