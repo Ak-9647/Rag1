@@ -40,6 +40,10 @@ steps:
       ]
     id: 'Deploy API Service'
 
+# Add this options block:
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 # Define the image to be pushed by the 'Push API Image' step
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/raggy-repo/rag-fun-api:$COMMIT_SHA'
