@@ -1,0 +1,51 @@
+# cloudbuild.yaml - For Raggy Application
+
+steps:
+  # 1. Build the Docker image for the Flask API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/raggy-repo/rag-fun-api:$COMMIT_SHA', # Tag with Artifact Registry path + commit SHA
+        './rag-api', # Context path for the build (where Dockerfile is)
+        '-f',
+        './rag-api/Dockerfile', # Explicitly specify Dockerfile location
+      ]
+    id: 'Build API Image'
+
+  # 2. Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/raggy-repo/rag-fun-api:$COMMIT_SHA']
+    id: 'Push API Image'
+
+  # 3. Deploy the image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run',
+        'deploy',
+        'rag-fun-api', # Name of the Cloud Run service
+        '--image=us-central1-docker.pkg.dev/$PROJECT_ID/raggy-repo/rag-fun-api:$COMMIT_SHA', # Deploy the image we just pushed
+        '--region=us-central1',
+        '--platform=managed',
+        '--service-account=rag-fun-runner@$PROJECT_ID.iam.gserviceaccount.com',
+        '--allow-unauthenticated',
+        # Set environment variables for the deployed service
+        # NOTE: Be careful with secrets here. Use --set-secrets for sensitive values.
+        '--set-env-vars=GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=us-central1,FIRESTORE_COLLECTION=raggy_docs,EMBEDDING_MODEL=textembedding-gecko@latest,GENERATION_MODEL=gemini-1.0-pro,SECRET_VERSION=latest,VS_ENDPOINT_ID=<YOUR_ENDPOINT_ID_HERE>,VS_DEPLOYED_INDEX_ID=rag_fun_embeddings_deployed',
+        # Use --set-secrets to securely inject the Firebase credentials secret
+        '--set-secrets=FIREBASE_CREDENTIALS_SECRET=firebase-credentials:latest',
+      ]
+    id: 'Deploy API Service'
+
+# Define the image to be pushed by the 'Push API Image' step
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/raggy-repo/rag-fun-api:$COMMIT_SHA'
+
+# Optional: Set timeout for the build
+# timeout: '1200s'
+
+# Use Cloud Build substitutions (these are automatically available)
+# $PROJECT_ID, $COMMIT_SHA, $LOCATION (maps to region) etc. 
